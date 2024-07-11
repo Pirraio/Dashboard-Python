@@ -15,6 +15,13 @@ app.index_string = '''
         <link href="https://fonts.cdnfonts.com/css/florida-project" rel="stylesheet">
     </head>
     <body>
+    <iframe
+        id="inlineFrameExample"
+        title="Inline Frame Example"
+        width="300"
+        height="200"
+        src="http://127.0.0.1:8050">
+    </iframe>
         {%app_entry%}
         <footer>
             {%config%}
