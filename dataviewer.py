@@ -5,6 +5,7 @@ import pandas as pd
 import os
 
 app = Dash(__name__)
+server = app.server #utilizei para rodar o servidor no Render
 
 # utilizei para modificar as estruturas em HTML e aplicar a fonte
 app.index_string = '''
