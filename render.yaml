@@ -1,7 +1,7 @@
 services:
   # See https://render.com/docs/blueprint-spec for more info on render blueprints
   - type: web
-    name: air-configuration-volume-8zz8
+    name: dashboard-dataviewer
     env: python
     plan: free
     # A requirements.txt file must exist
