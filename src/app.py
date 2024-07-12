@@ -7,6 +7,7 @@ import os # ferramenta utilizada para auxílio de rastreamento dos arquivos .xls
 
 #criador do servidor
 app = Dash(__name__)
+server = app.server # servidor utilizado para rodar no Render
 
 
 # utilizado especificamente para modificações no HTML (espeficamente usado nesse código para implementar a fonte)
