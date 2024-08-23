@@ -1,86 +1,72 @@
-# ferramentas importadas
-from dash import Dash, html, dcc, Input, Output  # importação do dash
-import plotly.express as px # ferramenta especifica para personalização de gráficos
-import pandas as pd # ferramenta para leitura de dados das planilhas
-import os # ferramenta utilizada para auxílio de rastreamento dos arquivos .xlsx
+from dash import Dash, html, dcc, Input, Output # utilizado para implementação da biblioteca Dash (gerador de gráficos)
+import plotly.express as px # utilizado para implementação do Protly (customizador de gráficos)
+import pandas as pd # utilizado para implementação do Pandas (analisador de dados)
+import os #utilizado para implementar o OS (rastreador de dados)
+
+# inicialização da biblioteca Dash
+app = Dash(__name__) # inicialização do projeto dash
+app.config.suppress_callback_exceptions = True # configuração de certificação e validação do callback
 
 
-#criador do servidor
-app = Dash(__name__)
-server = app.server # servidor utilizado para rodar no Render
-
-
-# utilizado especificamente para modificações no HTML (espeficamente usado nesse código para implementar a fonte)
-app.index_string = '''
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>DataViewer inPacta</title>
-        <link href="https://fonts.cdnfonts.com/css/florida-project" rel="stylesheet">
-    </head>
-    <body>
-        {%app_entry%}
-        <footer>
-            {%config%}
-            {%scripts%}
-            {%renderer%}
-        </footer>
-    </body>
-</html>
-'''
-
-
-# utilizado para rastrear os arquivos .xlsx
+# utilizado para dicrecionar os caminhos para os arquivos Excel que contêm os dados que serão analisados
 file_path_turma = os.path.join(os.path.dirname(__file__), "tabela_desempenho_da_turma.xlsx")
 file_path_estudante = os.path.join(os.path.dirname(__file__), "desempenho_estudante_turma.xlsx")
-#file_path_submissoes = os.path.join(os.path.dirname(__file__), "submissoes_por_dia.xlsx")
+file_path_submissoes = os.path.join(os.path.dirname(__file__), "submissoes_por_dia.xlsx")
+file_path_dificuldade = os.path.join(os.path.dirname(__file__), "tabela_de_desempnho_por_dificuldade.xlsx")
 
 
-# utilizado para ler e carregar os dados das planilhas
+# carrega os dados dos arquivos Excel
 df_turma = pd.read_excel(file_path_turma)
 df_estudante = pd.read_excel(file_path_estudante)
-#df_submissoes = pd.read_excel(file_path_submissoes)
+df_submissoes = pd.read_excel(file_path_submissoes)
+df_dificuldade = pd.read_excel(file_path_dificuldade)
 
+# modifica o DataFrame reformulando os dados (desempenho estudante)
+df_estudante_exp = df_estudante.explode(['expressoes', 'estrutura_de_decisao', 'repeticao_condicional', 'repeticao_contada', 'vetores'])
+df_estudante_exp = df_estudante_exp.melt(id_vars='user_id', value_vars=['expressoes', 'estrutura_de_decisao', 'repeticao_condicional', 'repeticao_contada', 'vetores'])
+df_estudante_exp.rename(columns={'variable': 'status'}, inplace=True)
 
-# utilizado para criar o gráfico de BARRAS para desempenho da turma
-fig_turma = px.bar(df_turma, x="list", y=["hits", "parcial", "undone"], # representação em plano cartesiano + filtro de seleção de amostra
-                   barmode="group", title="Desempenho da Turma por Lista", #Título do gráfico
-                   labels={"list": "Lista de Exercícios", "value": "Número de Submissões"}, #Variáveis lidas
-                   template="plotly_white") # cor e modelo de template
+# modifica o DataFrame reformulando os dados (desempenho turma)
+df_turma_long = df_turma.melt(id_vars='list', value_vars=['hits', 'parcial', 'undone'])
+df_turma_long['status'] = df_turma_long['variable'].map({'hits': 'Concluído', 'parcial': 'Incompleto', 'undone': 'Pendente'})
 
+# usado para criar o gráfico de barras para mostrar o desempenho da turma por lista de exercícios
+fig_turma = px.bar(df_turma_long, x="list", y="value",
+                   color="status", barmode="group",
+                   title="Desempenho da Turma por Lista",
+                   labels={"list": "Lista de Exercícios", "value": "Número de Submissões", "status": "Status"},
+                   template="plotly_white")
 
-# utilizado para criar o gráfico de PONTOS para desempenho dos estudantes filtrados
-fig_estudante = px.scatter(df_estudante, x="user_id", y="expressoes", # representação em plano cartesiano
-                           title="Desempenho dos Estudantes em Expressões", #Título do gráfico
-                           labels={"user_id": "ID do Estudante", "expressoes": "Número de Acertos"}, #Variáveis lidas
-                           template="plotly_white") # cor e modelo de template
+# usado para criar o gráfico de linha para mostrar o número de submissões por dia
+fig_submissoes = px.line(df_submissoes, x="data", y="qnt_de_submissoes",
+                         title="Número de Submissões por Dia",
+                         labels={"data": "Data", "qnt_de_submissoes": "Número de Submissões"},
+                         template="plotly_white")
 
+# modifica o DataFrame reformulando os dados (desempenho por dificuldade) e renomeando colunas
+df_dificuldade_exp = df_dificuldade.melt(id_vars='user_id', value_vars=['muito_faceis', 'faceis', 'medias', 'dificeis', 'muito_dificeis'])
+df_dificuldade_exp.rename(columns={'variable': 'dificuldade', 'value': 'submissoes'}, inplace=True)
+df_dificuldade_exp['submissoes'] = df_dificuldade_exp['submissoes'].apply(lambda x: eval(x) if isinstance(x, str) else x)
+df_dificuldade_exp[['Fácil', 'Médio', 'Difícil']] = pd.DataFrame(df_dificuldade_exp['submissoes'].tolist(), index=df_dificuldade_exp.index)
+df_dificuldade_long = df_dificuldade_exp.melt(id_vars=['user_id', 'dificuldade'], value_vars=['Fácil', 'Médio', 'Difícil'])
+df_dificuldade_long['dificuldade'] = df_dificuldade_long['dificuldade'].map({'muito_faceis': 'Muito Fáceis', 'faceis': 'Fáceis', 'medias': 'Médias', 'dificeis': 'Difíceis', 'muito_dificeis': 'Muito Difíceis'})
 
-# utilizado para criar o gráfico de LINHA para submissoes por dia
+# usado para criar o gráfico de barras para mostrar o desempenho dos estudantes por nível de dificuldade
+fig_dificuldade = px.bar(df_dificuldade_long, x="dificuldade", y="value",
+                        color="variable", barmode="group",
+                        title="Desempenho dos Estudantes por Dificuldade",
+                        labels={"dificuldade": "Nível de Dificuldade", "value": "Quantidade de Submissões", "variable": "Tipo"},
+                        template="plotly_white")
 
-# fig_submissoes = px.line(df_submissoes, x="data", y="qnt_de_submissoes", # representação em plano cartesiano
-#                          title="Número de Submissões por Dia", #Título do gráfico
-#                          labels={"data": "Data", "qnt_de_submissoes": "Número de Submissões"}, #Variáveis lidas
-#                          template="plotly_white") # cor e modelo de template
-
-
-# opções para realizar o dropdown
-opcoes = list(df_estudante['user_id'].unique())
-opcoes.append("GERAL")
-
-
-# utilizado para customização de alguns recursos HTML importados do próprio Dash
+# utilizado para criar o layout de aplicação e criar diferentes abas para cada gráfico
 app.layout = html.Div(children=[
     html.H1(children='DataViewer inPacta: Desempenho dos Estudantes'),
-    html.H2(children='Gráficos de Desempenho por Lista e por Estudante'),
-
+    html.H2(children='Gráficos de Desempenho por Lista'),
 
     html.Div(children='''
-        Obs: Os gráficos mostram o desempenho da turma e dos estudantes em diferentes listas de atividade estudantis.
+        Obs: Os gráficos mostram o desempenho da turma e o número de submissões diárias.
     '''),
 
-
-    # geradores e estilizadores HTML dos gráficos
     dcc.Tabs([
         dcc.Tab(label='Desempenho da Turma', children=[
             dcc.Graph(
@@ -88,46 +74,74 @@ app.layout = html.Div(children=[
                 figure=fig_turma
             )
         ]),
-        dcc.Tab(label='Desempenho por Estudantes', children=[
-            dcc.Dropdown(opcoes, value='GERAL', id='lista_estudantes'),
+        dcc.Tab(label='Submissões por Dia', children=[
             dcc.Graph(
-                id='grafico_desempenho_estudantes',
-                figure=fig_estudante
+                id='grafico_submissoes_dia',
+                figure=fig_submissoes
             )
         ]),
-        # dcc.Tab(label='Submissões por Dia', children=[
-        #     dcc.Graph(
-        #         id='grafico_submissoes_dia',
-        #         figure=fig_submissoes
-        #     )
-        #]),
+        dcc.Tab(label='Desempenho por Estudante', children=[
+            html.Div([
+                dcc.Dropdown(
+                    id='dropdown_estudante',
+                    options=[{'label': str(id), 'value': id} for id in df_estudante['user_id'].unique()],
+                    value=df_estudante['user_id'].unique()[0]  
+                ),
+                dcc.Dropdown(
+                    id='dropdown_assunto',
+                    options=[
+                        {'label': 'Expressões', 'value': 'expressoes'},
+                        {'label': 'Estrutura de Decisão', 'value': 'estrutura_de_decisao'},
+                        {'label': 'Repetição Condicional', 'value': 'repeticao_condicional'},
+                        {'label': 'Repetição Contada', 'value': 'repeticao_contada'},
+                        {'label': 'Vetores', 'value': 'vetores'}
+                    ],
+                    value='expressoes'  # valor inicial do dropdown de assuntos
+                ),
+                dcc.Graph(
+                    id='grafico_desempenho_estudante'
+                )
+            ])
+        ]),
+        dcc.Tab(label='Desempenho por Dificuldade', children=[
+            dcc.Graph(
+                id='grafico_desempenho_dificuldade',
+                figure=fig_dificuldade
+            )
+        ]),
     ])
 ], className='custom-container')
 
-
-# utilizado para atualizar o gráfico de desempenho dos estudantes após tal função ser chamada
+# Callback utilizada para atualizar o gráfico de desempenho por estudante selecionado
 @app.callback(
-    Output('grafico_desempenho_estudantes', 'figure'),
-    Input('lista_estudantes', 'value')
+    Output('grafico_desempenho_estudante', 'figure'),
+    [Input('dropdown_estudante', 'value'),
+     Input('dropdown_assunto', 'value')]
 )
-# atualização após chamar a função GERAL ( onde ficará a amostra uma tabela de maneira geral de todos os dados), função essa já padrão.
-def update_output(value):
-    if value == "GERAL":
-        fig = px.scatter(df_estudante, x="user_id", y="expressoes", # representação em plano cartesiano
-                         title="Desempenho dos Estudantes em Expressões", #Título do gráfico
-                         labels={"user_id": "ID do Estudante", "expressoes": "Número de Acertos"}, #Variáveis lidas
-                         template="plotly_white") # cor e modelo de template
-       
-# atualização após chamar a função de filtrar e selecionar o estudante (abre lista por user_id [id]) onde é possível selecionar o estudante específico.
-    else:
-        tabela_filtrada = df_estudante.loc[df_estudante['user_id'] == value, :]
-        fig = px.scatter(tabela_filtrada, x="user_id", y="expressoes", # representação em plano cartesiano
-                         title=f"Desempenho do Estudante {value} em Expressões", #Título do gráfico
-                         labels={"user_id": "ID do Estudante", "expressoes": "Número de Acertos"}, #Variáveis lidas
-                         template="plotly_white") # cor e modelo de template
+# modelos de filtragem
+def update_estudante_graph(selected_user_id, selected_assunto):
+    # filtragem de dados
+    df_filtered = df_estudante_exp[(df_estudante_exp['user_id'] == selected_user_id) & (df_estudante_exp['status'] == selected_assunto)]
+    
+    # apresentação de valores
+    df_filtered['value'] = df_filtered['value'].apply(lambda x: eval(x) if isinstance(x, str) else x)
+    
+    # usado para adicionar colunas separadas para cada valor dentro dos colchetes
+    df_filtered[['Concluído', 'Incompleto', 'Pendente']] = pd.DataFrame(df_filtered['value'].tolist(), index=df_filtered.index)
+    
+    # usado para preparar dados para o gráfico
+    df_pivot = df_filtered.groupby('user_id')[['Concluído', 'Incompleto', 'Pendente']].sum().reset_index()
+    
+    # criação do gráfico
+    fig = px.bar(df_pivot, x='user_id', y=['Concluído', 'Incompleto', 'Pendente'], 
+                 title=f"Desempenho do Estudante {selected_user_id} em {selected_assunto}",
+                 labels={"user_id": "ID do Estudante", "value": "Quantidade"},
+                 text_auto=True, 
+                 barmode='group',
+                 template="plotly_white")
+
     return fig
 
-
-# Inicialização do servidor
+# execução do aplicativo
 if __name__ == '__main__':
     app.run_server(debug=True)
