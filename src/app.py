@@ -3,8 +3,10 @@ import plotly.express as px # utilizado para implementação do Protly (customiz
 import pandas as pd # utilizado para implementação do Pandas (analisador de dados)
 import os #utilizado para implementar o OS (rastreador de dados)
 
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
 # inicialização da biblioteca Dash
-app = Dash(__name__) # inicialização do projeto dash
+app = Dash(__name__, external_stylesheets=external_stylesheets) # inicialização do projeto dash
 app.config.suppress_callback_exceptions = True # configuração de certificação e validação do callback
 
 
@@ -60,57 +62,56 @@ fig_dificuldade = px.bar(df_dificuldade_long, x="dificuldade", y="value",
 
 # utilizado para criar o layout de aplicação e criar diferentes abas para cada gráfico
 app.layout = html.Div(children=[
-    html.H1(children='DataViewer inPacta: Desempenho dos Estudantes'),
-    html.H2(children='Gráficos de Desempenho por Lista'),
-
-    html.Div(children='''
-        Obs: Os gráficos mostram o desempenho da turma e o número de submissões diárias.
-    '''),
-
-    dcc.Tabs([
-        dcc.Tab(label='Desempenho da Turma', children=[
+    html.H1(children='DataViewer inPacta'),
+    html.H2(children='Gráficos do Desempenho dos Estudantes'),
+    
+    html.Div([
+        html.Div([
             dcc.Graph(
                 id='grafico_desempenho_turma',
                 figure=fig_turma
             )
-        ]),
-        dcc.Tab(label='Submissões por Dia', children=[
+        ], className='five columns'),
+
+        html.Div([
             dcc.Graph(
                 id='grafico_submissoes_dia',
                 figure=fig_submissoes
             )
-        ]),
-        dcc.Tab(label='Desempenho por Estudante', children=[
-            html.Div([
-                dcc.Dropdown(
-                    id='dropdown_estudante',
-                    options=[{'label': str(id), 'value': id} for id in df_estudante['user_id'].unique()],
-                    value=df_estudante['user_id'].unique()[0]  
-                ),
-                dcc.Dropdown(
-                    id='dropdown_assunto',
-                    options=[
-                        {'label': 'Expressões', 'value': 'expressoes'},
-                        {'label': 'Estrutura de Decisão', 'value': 'estrutura_de_decisao'},
-                        {'label': 'Repetição Condicional', 'value': 'repeticao_condicional'},
-                        {'label': 'Repetição Contada', 'value': 'repeticao_contada'},
-                        {'label': 'Vetores', 'value': 'vetores'}
-                    ],
-                    value='expressoes'  # valor inicial do dropdown de assuntos
-                ),
-                dcc.Graph(
-                    id='grafico_desempenho_estudante'
-                )
-            ])
-        ]),
-        dcc.Tab(label='Desempenho por Dificuldade', children=[
+        ], className='five columns'),
+            
+        html.Div([
+            
+            dcc.Graph(
+                id='grafico_desempenho_estudante'
+            ),
+            dcc.Dropdown(
+                id='dropdown_estudante',
+                options=[{'label': str(id), 'value': id} for id in df_estudante['user_id'].unique()],
+                value=df_estudante['user_id'].unique()[0]  
+            ),
+            dcc.Dropdown(
+                id='dropdown_assunto',
+                options=[
+                    {'label': 'Expressões', 'value': 'expressoes'},
+                    {'label': 'Estrutura de Decisão', 'value': 'estrutura_de_decisao'},
+                    {'label': 'Repetição Condicional', 'value': 'repeticao_condicional'},
+                    {'label': 'Repetição Contada', 'value': 'repeticao_contada'},
+                    {'label': 'Vetores', 'value': 'vetores'}
+                ],
+                value='expressoes'  # valor inicial do dropdown de assuntos
+            )
+        ], className='five columns'),
+
+        html.Div([
             dcc.Graph(
                 id='grafico_desempenho_dificuldade',
                 figure=fig_dificuldade
             )
-        ]),
-    ])
-], className='custom-container')
+        ], className='five columns'),
+    
+    ], className='custom-container'),
+])
 
 # Callback utilizada para atualizar o gráfico de desempenho por estudante selecionado
 @app.callback(
@@ -143,5 +144,8 @@ def update_estudante_graph(selected_user_id, selected_assunto):
     return fig
 
 # execução do aplicativo
+
+server = app.server
+
 if __name__ == '__main__':
     app.run_server(debug=True)
