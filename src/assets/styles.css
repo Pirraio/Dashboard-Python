@@ -5,16 +5,17 @@ body {
     margin: 0;
     padding: 0;
     color: navy;
+    background-color: #111111;
 }
 
 h1 {
-    color: #332;
+    color: rgb(238, 238, 234);
     text-align: center;
     margin-top: 20px;
 }
 
 h2 {
-    color: #665;
+    color: rgb(238, 238, 234);
     text-align: center;
     margin-top: 10px;
     font-size: 28px;
@@ -22,7 +23,7 @@ h2 {
 
 .custom-container {
     padding: 20px;
-    background-color: #fff;
+    background-color: #111111;
     border-radius: 5px;
     margin: 20px auto;
     text-align: center;
@@ -35,4 +36,9 @@ h2 {
 
 .dropdown-container {
     margin: 20px 0;
+}
+
+.Select-value {
+    background-color: #B8B8B8;
+    border-color: blue;
 }
