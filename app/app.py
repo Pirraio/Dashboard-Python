@@ -7,6 +7,7 @@ def file_path(path):
     new_path = os.path.join(os.path.dirname(__file__), path)
     return new_path
 
+layout_path = os.path.join(os.path.dirname(__file__), "assets/layout.html")
 path_turma = os.path.join(os.path.dirname(__file__), "../data/2023.1/desempenho_da_turma.csv")
 
 df_turma = pd.read_csv(path_turma)
@@ -20,15 +21,15 @@ fig_turma = px.bar(df_turma_long, x="list", y="value",
                    labels={"list": "Lista de Exercícios", "value": "Número de Submissões", "status": "Status"},
                    template="plotly_dark")
 
+app = Dash(__name__)
 
-df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminder_unfiltered.csv')
+app.layout = html.Div([
+html.Iframe(
+        src="/assets/layout.html",
+        style={"height": "1067px", "width": "100%"}
+    )   
+])
 
-app = Dash()
-
-app.layout = [
-    html.H1(children='Dashboard Dataviewer', style={'textAlign':'center'}),
-    dcc.Graph(id='desempenho_turma', figure=fig_turma)
-]
 
 if __name__ == '__main__':
     app.run(debug=True)
