@@ -63,8 +63,10 @@ fig.update_layout(yaxis_title='Horas', template='plotly_dark', title='Tempo de r
 
 layout_path = os.path.join(os.path.dirname(__file__), "assets/layout.html")
 path_turma = os.path.join(os.path.dirname(__file__), "../data/2023.1/desempenho_da_turma.csv")
+path_submissoes = os.path.join(os.path.dirname(__file__), "../data/2023.1/submissoes_por_dia.csv")
 
 df_turma = pd.read_csv(path_turma)
+df_submissoes = pd.read_csv(path_submissoes, dayfirst=True, parse_dates=[0])
 
 df_turma_long = df_turma.melt(id_vars='list', value_vars=['hits', 'parcial', 'undone'])
 df_turma_long['status'] = df_turma_long['variable'].map({'hits': 'Concluído', 'parcial': 'Incompleto', 'undone': 'Pendente'})
@@ -73,9 +75,16 @@ fig_turma = px.bar(df_turma_long, x="list", y="value",
                    color="status",
                    title="Desempenho da Turma por Lista",
                    labels={"list": "Lista de Exercícios", "value": "Número de Submissões", "status": "Status"},
-                   template="plotly_dark")
+                   template="plotly_dark"
+                   )
+fig_submissoes = px.line(df_submissoes, x="data", y="qnt_de_submissoes",
+                         title="Número de Submissões por Dia",
+                         labels={"data": "Data", "qnt_de_submissoes": "Número de Submissões"},
+                         template="plotly_dark")
 
-app = Dash(__name__)
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+app = Dash(__name__, external_stylesheets=external_stylesheets)
 
 app.layout = [
     html.Div(className='side-bar', children=[
@@ -98,15 +107,18 @@ app.layout = [
     ]),
 
     html.Div(className='content', children=[
-        html.Div(className='', children=[
+        html.Div(children=[
             dcc.Graph(id='desempenho_turma', figure=fig_turma)
         ]),
-        html.Div(children=[
-            dcc.Graph(id='g1', figure=fig)
+        html.Div(className='six columns',children=[
+            dcc.Graph(id='tempo_estudantes', figure=fig)
         ]),
+        html.Div(className='five columns', children=[
+                dcc.Graph(id='submissoes_por_dia', figure=fig_submissoes
+            )
+        ])
     ]),
 ]
-
 
 if __name__ == '__main__':
     app.run(debug=True)
