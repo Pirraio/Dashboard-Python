@@ -82,9 +82,7 @@ fig_submissoes = px.line(df_submissoes, x="data", y="qnt_de_submissoes",
                          labels={"data": "Data", "qnt_de_submissoes": "Número de Submissões"},
                          template="plotly_dark")
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
-app = Dash(__name__, external_stylesheets=external_stylesheets)
+app = Dash(__name__)
 
 app.layout = [
     html.Div(className='side-bar', children=[
@@ -108,15 +106,16 @@ app.layout = [
 
     html.Div(className='content', children=[
         html.Div(children=[
-            dcc.Graph(id='desempenho_turma', figure=fig_turma)
+            dcc.Graph(className='six columns', id='desempenho_turma', figure=fig_turma)
         ]),
-        html.Div(className='six columns',children=[
-            dcc.Graph(id='tempo_estudantes', figure=fig)
-        ]),
-        html.Div(className='five columns', children=[
+        html.Div(className='six columns', children=[
                 dcc.Graph(id='submissoes_por_dia', figure=fig_submissoes
             )
-        ])
+        ]),
+        html.Div(className='twelve columns',children=[
+            dcc.Graph(id='tempo_estudantes', figure=fig)
+        ]),
+        
     ]),
 ]
 
