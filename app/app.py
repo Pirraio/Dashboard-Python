@@ -31,7 +31,7 @@ def find_nearest(array, value):
     return array[idx]    
 
 def box_plot(header):
-    path_metrics = os.path.join(os.path.dirname(__file__), "../data/2023.1/metrics_tempo.csv")
+    path_metrics = os.path.join(os.path.dirname(__file__), "../data/2024.1/metrics_tempo.csv")
     metrics_time = pd.read_csv(path_metrics)
     total_time = list(metrics_time[header].dropna())
     total_time.sort()
@@ -62,8 +62,8 @@ for xd, yd in zip(x_data, y_data):
 fig.update_layout(yaxis_title='Horas', template='plotly_dark', title='Tempo de realização das listas',)
 
 layout_path = os.path.join(os.path.dirname(__file__), "assets/layout.html")
-path_turma = os.path.join(os.path.dirname(__file__), "../data/2023.1/desempenho_da_turma.csv")
-path_submissoes = os.path.join(os.path.dirname(__file__), "../data/2023.1/submissoes_por_dia.csv")
+path_turma = os.path.join(os.path.dirname(__file__), "../data/2024.1/desempenho_da_turma.csv")
+path_submissoes = os.path.join(os.path.dirname(__file__), "../data/2024.1/submissoes_por_dia.csv")
 
 df_turma = pd.read_csv(path_turma)
 df_submissoes = pd.read_csv(path_submissoes, dayfirst=True, parse_dates=[0])
@@ -92,10 +92,10 @@ app.layout = [
         ]),
         html.Div(className='semestre', children=[
             html.H3('Semestre'),
-            html.A('2023.1', className='active'),
-            html.A('2023.2'),
-            html.A('2024.1'),
+            html.A('2024.1', className='active'),
             html.A('2024.2'),
+            html.A('2025.1'),
+            html.A('2025.2'),
         ]),
         html.Div(className='turma', children=[
             html.H3('Turma'),
